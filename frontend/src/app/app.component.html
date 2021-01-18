@@ -1,0 +1,18 @@
+<div class="flex flex-col h-screen">
+    <!-- Header -->
+    <header app-header class="flex-shrink-0 flex flex-row"></header>
+
+    <!-- Content -->
+    <div class="flex-1 flex flex-row overflow-hidden">
+        <!--Sidebar-->
+        <div
+            app-sidebar
+            class="flex-shrink-0 flex flex-col justify-between space-y-3 border-r-2 border-gray-200 w-24 lg:w-72 p-6 bg-white overflow-y-auto"
+        ></div>
+
+        <!-- Main Conent -->
+        <main class="flex-1 overflow-hidden">
+            <router-outlet></router-outlet>
+        </main>
+    </div>
+</div>

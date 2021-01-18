@@ -1,0 +1,43 @@
+#member-details-form {
+    section {
+        @apply grid;
+        @apply grid-cols-8;
+        @apply gap-4;
+
+        @apply mb-12;
+        @apply px-8;
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            @apply col-span-8;
+
+            @apply mb-3;
+
+            @apply font-semibold;
+            @apply text-lg;
+            @apply text-blue-700;
+        }
+
+        .form-field-wrapper {
+            mat-form-field {
+                @apply w-full;
+
+                input {
+                    @apply text-bluegray-700;
+                }
+            }
+        }
+    }
+}
+
+.date-highlights-sunday {
+    @apply rounded-full;
+    @apply bg-blue-400;
+
+    border-radius: 9999px;
+    background-color: #bfdbfe;
+}

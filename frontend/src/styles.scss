@@ -1,0 +1,21 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import './assets/font/fonts.scss';
+
+html {
+    font-size: 14px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.font-flow {
+    font-size: 14px;
+    font-family: Flow;
+}
+
+.font-nunito {
+    font-size: 14px;
+    font-family: Nunito;
+}

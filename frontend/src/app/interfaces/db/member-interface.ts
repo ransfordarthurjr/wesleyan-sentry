@@ -1,0 +1,42 @@
+import { AltarServersTypeAssociationInterface } from './altar-servers-type-association-interface';
+import { ChurchGroupAssociationInterface } from './church-group-association-interface';
+import { ClassLeaderInterface } from './class-leader-interface';
+import { CountryInterface } from './country-interface';
+import { GenderInterface } from './gender-interface';
+import { MaritalStatusInterface } from './marital-status-interface';
+import { MemberClassInterface } from './member-class-interface';
+import { MembershipStatusInterface } from './membership-status-interface';
+import { OccupationInterface } from './occupation-interface';
+import { OrganizationAssociationInterface } from './organization-association-interface';
+import { TitleInterface } from './title-interface';
+
+export interface MemberInterface {
+    member_id: number;
+    firstname: string;
+    lastname: string;
+    othernames: string;
+    email: string;
+    mobile: string;
+    mobile_2: string;
+    dateofbirth: Date;
+    baptised: string;
+    confirmed: string;
+    gender_id: number;
+    title_id: number;
+    membership_status_id: number;
+    marital_status_id: number;
+    country_id: number;
+    occupation_id: number;
+    countries: CountryInterface;
+    members_genders: GenderInterface;
+    members_marital_statuses: MaritalStatusInterface;
+    members_membership_statuses: MembershipStatusInterface;
+    members_occupations: OccupationInterface;
+    members_titles: TitleInterface;
+    members_classes: MemberClassInterface[];
+    assistant_class_leaders: ClassLeaderInterface[];
+    class_leaders: ClassLeaderInterface[];
+    members_organizations_associations: OrganizationAssociationInterface[];
+    members_church_groups_associations: ChurchGroupAssociationInterface[];
+    members_altar_servers_types_associations: AltarServersTypeAssociationInterface[];
+}

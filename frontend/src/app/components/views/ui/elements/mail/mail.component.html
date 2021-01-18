@@ -1,0 +1,23 @@
+<a href="#!" class="block border-t border-gray-200 bg-white">
+    <div class="flex flex-col space-y-2 border-l-4 p-6" [ngClass]="isRead()">
+        <div class="flex-shrink-0 flex flex-row items-center justify-between">
+            <span class="text-base font-semibold text-black">{{
+                email.sender
+            }}</span>
+            <span class="text-base text-gray-400">{{
+                email.timeSinceReceived
+            }}</span>
+        </div>
+        <span
+            class="flex-shrink-0 text-xl text-gray-700 overflow-hidden overflow-ellipsis whitespace-nowrap"
+            >{{ email.subject }}</span
+        >
+        <div class="flex-1">
+            <p
+                class="h-12 text-base text-gray-400 overflow-hidden overflow-ellipsis"
+            >
+                {{ email.message }}
+            </p>
+        </div>
+    </div>
+</a>

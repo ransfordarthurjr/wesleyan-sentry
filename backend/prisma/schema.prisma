@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model coordinating_offices {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model countries {
+  country_id        Int       @id @default(autoincrement())
+  country           String
+  continent         String
+  region            String
+  iso               String
+  iso3              String
+  capital           String?
+  independence_year Int?
+  unsd_code         String?
+  phone_code        String?
+  members           members[]
+}
+
+model members {
+  member_id                                Int                                        @id @default(autoincrement())
+  firstname                                String
+  lastname                                 String
+  othernames                               String
+  email                                    String
+  mobile                                   String
+  mobile_2                                 String
+  dateofbirth                              DateTime
+  baptised                                 enums_booleany                             @default(dbgenerated())
+  confirmed                                enums_booleany                             @default(dbgenerated())
+  gender_id                                Int
+  title_id                                 Int
+  membership_status_id                     Int
+  marital_status_id                        Int
+  country_id                               Int
+  occupation_id                            Int
+  countries                                countries                                  @relation(fields: [country_id], references: [country_id])
+  members_genders                          members_genders                            @relation(fields: [gender_id], references: [id])
+  members_marital_statuses                 members_marital_statuses                   @relation(fields: [marital_status_id], references: [id])
+  members_membership_statuses              members_membership_statuses                @relation(fields: [membership_status_id], references: [id])
+  members_occupations                      members_occupations                        @relation(fields: [occupation_id], references: [id])
+  members_titles                           members_titles                             @relation(fields: [title_id], references: [id])
+  members_altar_servers_types_associations members_altar_servers_types_associations[]
+  members_church_groups_associations       members_church_groups_associations[]
+  members_classes                          members_classes[]
+  assistant_class_leaders                  members_class_leaders[]                    @relation("membersTomembers_class_leaders_member_id_asst_leader")
+  class_leaders                            members_class_leaders[]                    @relation("membersTomembers_class_leaders_member_id_leader")
+  members_organizations_associations       members_organizations_associations[]
+  members_tithes_payments                  members_tithes_payments[]
+
+  @@index([country_id], name: "FK_country_idx")
+  @@index([gender_id], name: "FK_gender_idx")
+  @@index([marital_status_id], name: "FK_marital_status_idx")
+  @@index([membership_status_id], name: "FK_membership_status_idx")
+  @@index([occupation_id], name: "FK_occupation_idx")
+  @@index([title_id], name: "FK_title_idx")
+}
+
+model members_altar_servers_types {
+  id                                       Int                                        @id @default(autoincrement())
+  name                                     String                                     @unique
+  members_altar_servers_types_associations members_altar_servers_types_associations[]
+}
+
+model members_church_groups {
+  id                                 Int                                  @id @default(autoincrement())
+  name                               String                               @unique
+  members_church_groups_associations members_church_groups_associations[]
+}
+
+model members_genders {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  members members[]
+}
+
+model members_marital_statuses {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String    @default("")
+  members     members[]
+}
+
+model members_membership_statuses {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String    @default("")
+  members     members[]
+}
+
+model members_occupations {
+  id                             Int                            @id @default(autoincrement())
+  name                           String                         @unique
+  industry_id                    Int
+  members_occupations_industries members_occupations_industries @relation(fields: [industry_id], references: [id])
+  members                        members[]
+
+  @@index([industry_id], name: "FK_industry_idx")
+}
+
+model members_occupations_industries {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @unique
+  members_occupations members_occupations[]
+}
+
+model members_organizations {
+  id                                 Int                                  @id @default(autoincrement())
+  name                               String                               @unique
+  members_organizations_associations members_organizations_associations[]
+}
+
+model members_titles {
+  id      Int       @id @default(autoincrement())
+  title   String    @unique
+  members members[]
+}
+
+model members_class_leaders {
+  id                      Int               @id @default(autoincrement())
+  class_name              String?           @default("")
+  member_id_leader        Int
+  member_id_asst_leader   Int?
+  assistant_class_leaders members?          @relation("membersTomembers_class_leaders_member_id_asst_leader", fields: [member_id_asst_leader], references: [member_id])
+  class_leaders           members           @relation("membersTomembers_class_leaders_member_id_leader", fields: [member_id_leader], references: [member_id])
+  members_classes         members_classes[]
+
+  @@index([member_id_asst_leader], name: "FK_member_asst_leader_idx")
+  @@index([member_id_leader], name: "FK_member_leader_idx")
+}
+
+model members_classes {
+  id                    Int                   @id @default(autoincrement())
+  member_id             Int
+  class_id              Int
+  members_class_leaders members_class_leaders @relation(fields: [class_id], references: [id])
+  members               members               @relation(fields: [member_id], references: [member_id])
+
+  @@index([class_id], name: "FK_class_idx")
+  @@index([member_id], name: "FK_member_idx")
+}
+
+model members_organizations_associations {
+  id                    Int                   @id @default(autoincrement())
+  member_id             Int
+  organization_id       Int
+  members               members               @relation(fields: [member_id], references: [member_id])
+  members_organizations members_organizations @relation(fields: [organization_id], references: [id])
+
+  @@index([organization_id], name: "FK_members_organizations_idx")
+  @@index([member_id], name: "FK_organizations_members_idx")
+}
+
+model members_church_groups_associations {
+  id                    Int                   @id @default(autoincrement())
+  member_id             Int
+  church_group_id       Int
+  members_church_groups members_church_groups @relation(fields: [church_group_id], references: [id])
+  members               members               @relation(fields: [member_id], references: [member_id])
+
+  @@index([member_id], name: "FK_church_groups_members_idx")
+  @@index([church_group_id], name: "FK_members_church_groups_idx")
+}
+
+model members_altar_servers_types_associations {
+  id                          Int                         @id @default(autoincrement())
+  member_id                   Int
+  altar_servers_type_id       Int
+  members_altar_servers_types members_altar_servers_types @relation(fields: [altar_servers_type_id], references: [id])
+  members                     members                     @relation(fields: [member_id], references: [member_id])
+
+  @@index([member_id], name: "FK_altar_servers_types_members_idx")
+  @@index([altar_servers_type_id], name: "FK_members_altar_servers_types_idx")
+}
+
+model members_tithes_payments {
+  id                    Int                 @id @default(autoincrement())
+  transaction_date      DateTime            @default(now())
+  payment_date          DateTime
+  payment_type_id       Int
+  member_id             Int
+  payment_currency_id   Int
+  amount                Float               @default(0.00)
+  transaction_reference String              @default("")
+  description           String              @default("")
+  members               members             @relation(fields: [member_id], references: [member_id])
+  payments_currencies   payments_currencies @relation(fields: [payment_currency_id], references: [id])
+  payments_types        payments_types      @relation(fields: [payment_type_id], references: [id])
+
+  @@index([member_id], name: "FK_memeber_tithe_idx")
+  @@index([payment_currency_id], name: "FK_payment_currency_idx")
+  @@index([payment_type_id], name: "FK_payment_idx")
+}
+
+model payments_types {
+  id                      Int                       @id @default(autoincrement())
+  name                    String                    @unique
+  description             String                    @default("")
+  members_tithes_payments members_tithes_payments[]
+}
+
+model payments_currencies {
+  id                      Int                       @id @default(autoincrement())
+  currency                String                    @unique
+  code                    String
+  code2                   String
+  members_tithes_payments members_tithes_payments[]
+}
+
+enum enums_booleany {
+  truthy @map("1")
+  falsey @map("0")
+}
