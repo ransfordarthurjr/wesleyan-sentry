@@ -32,6 +32,7 @@ import { TithesTithePaymentPreviewComponent } from '../../ui/elements/tithes-tit
 import { ClassLeaderInterface } from 'src/app/interfaces/db/class-leader-interface';
 import { PaymentTypeInterface } from 'src/app/interfaces/db/payment-type-interface';
 import { PaymentCurrencyInterface } from 'src/app/interfaces/db/payment-currency-interface';
+import { doesNotReject } from 'assert';
 
 @Component({
     selector: 'app-tithes',
@@ -66,8 +67,8 @@ export class TithesComponent implements OnInit, OnDestroy {
     private _searchPaymentsTextControlValue: string = '';
 
     private _tithePaymentForm!: FormGroup;
-    private _searchMemberAutoCompleteTextControl!: FormControl;
-    private _searchMemberAutoCompleteTextControlValue: string = '';
+    private _searchMemberAutocompleteTextControl!: FormControl;
+    private _searchMemberAutocompleteTextControlValue: string = '';
     private _lastnameTextControl!: FormControl;
     private _firstnameTextControl!: FormControl;
     private _othernamesTextControl!: FormControl;
@@ -128,10 +129,10 @@ export class TithesComponent implements OnInit, OnDestroy {
     // received events//
 
     public updateAutocompleteOptions(event$: any) {
-        this._searchMemberAutoCompleteTextControlValue = this._searchMemberAutoCompleteTextControl.value;
+        this._searchMemberAutocompleteTextControlValue = this._searchMemberAutocompleteTextControl.value;
 
         this.memberService
-            .getMembersByName(this._searchMemberAutoCompleteTextControlValue)
+            .getMembersByName(this._searchMemberAutocompleteTextControlValue)
             .pipe(map((response) => response.data))
             .subscribe({
                 next: (members) => {
@@ -166,7 +167,7 @@ export class TithesComponent implements OnInit, OnDestroy {
 
     private _setupTithePayementForm(): void {
         /* #region initializeformcontrols */
-        this._searchMemberAutoCompleteTextControl = new FormControl(
+        this._searchMemberAutocompleteTextControl = new FormControl(
             { value: '', disabled: false },
             { validators: Validators.compose([Validators.required]) }
         );
@@ -209,7 +210,7 @@ export class TithesComponent implements OnInit, OnDestroy {
         /* #endregion */
         this._tithePaymentForm = this.tithePaymentFormBuilder.group({
             /* #region setformcontrols */
-            searchMemberAutoComplete: this._searchMemberAutoCompleteTextControl,
+            searchMemberAutoComplete: this._searchMemberAutocompleteTextControl,
             lastname: this._lastnameTextControl,
             firstname: this._firstnameTextControl,
             othernames: this._othernamesTextControl,
@@ -269,9 +270,41 @@ export class TithesComponent implements OnInit, OnDestroy {
                 },
             });
 
+        //setup observer for search member
+        // 1. when typed
+        // 2. when selected
+        const searchMemberAutocompleteSelected$ = this._searchMemberAutocompleteTextControl.valueChanges.pipe(
+            filter((value) => typeof value === 'object' && value !== null)
+        );
+
+        const searchMemberAutocompleteTyped$ = this._searchMemberAutocompleteTextControl.valueChanges.pipe(
+            filter((value) => typeof value === 'string')
+        );
+
+        searchMemberAutocompleteSelected$
+            .pipe
+            //debounceTime(1 * 1000)
+            // todo sanitize input
+            ()
+            .subscribe({
+                next: (selectedValue) => {
+                    console.log('sv', selectedValue);
+                },
+            });
+        searchMemberAutocompleteTyped$
+            .pipe
+            //debounceTime(1 * 1000)
+            // todo sanitize input
+            ()
+            .subscribe({
+                next: (typedValue) => {
+                    console.log('tv', typedValue);
+                },
+            });
+
         //update member options based on typed input
 
-        /*this.searchMemberAutoCompleteTextControl.valueChanges
+        /*this.searchMemberAutocompleteTextControl.valueChanges
             .pipe(
                 // wait a second after typing has top before querying
                 debounceTime(1 * 1000),
@@ -282,11 +315,11 @@ export class TithesComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: (value) => {
-                    this._searchMemberAutoCompleteTextControlValue = value;
+                    this._searchMemberAutocompleteTextControlValue = value;
 
                     this.memberService
                         .getMembersByName(
-                            this._searchMemberAutoCompleteTextControlValue
+                            this._searchMemberAutocompleteTextControlValue
                         )
                         .pipe(map((response) => response.data))
                         .subscribe({
@@ -406,6 +439,11 @@ export class TithesComponent implements OnInit, OnDestroy {
     /* #endregion */
 
     /* #region memberfunctions */
+    public searchMemberAutocompleteDisplay(
+        member: MemberInterface
+    ): string | undefined {
+        return member ? `${member.firstname} ${member.lastname}` : undefined;
+    }
     /* #endregion */
 
     /* #region classes */
@@ -472,8 +510,8 @@ export class TithesComponent implements OnInit, OnDestroy {
         return this._tithePaymentForm;
     }
 
-    public get searchMemberAutoCompleteTextControl(): FormControl {
-        return this._searchMemberAutoCompleteTextControl;
+    public get searchMemberAutocompleteTextControl(): FormControl {
+        return this._searchMemberAutocompleteTextControl;
     }
 
     public get lastnameTextControl(): FormControl {

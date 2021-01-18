@@ -268,7 +268,7 @@
                                 type="text"
                                 matInput
                                 [formControl]="
-                                    searchMemberAutoCompleteTextControl
+                                    searchMemberAutocompleteTextControl
                                 "
                                 placeholder="Select Member"
                                 value=""
@@ -280,6 +280,7 @@
 
                             <mat-autocomplete
                                 #memeberSelectAutocomplete="matAutocomplete"
+                                [displayWith]="searchMemberAutocompleteDisplay"
                             >
                                 <mat-option
                                     *ngFor="
@@ -394,7 +395,7 @@
                             >
                                 <mat-option
                                     *ngFor="let currency of paymentCurrencies"
-                                    [value]="currency.id"
+                                    [value]="currency"
                                 >
                                     {{
                                         currency.currency +
