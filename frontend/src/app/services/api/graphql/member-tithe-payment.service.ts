@@ -28,6 +28,13 @@ class MembersTithesPaymentsQuery extends Query<Response> {
                     firstname
                     lastname
                     othernames
+                    #classes member belongs to
+                    #ideally one
+                    members_classes {
+                        id
+                        member_id
+                        class_id
+                    }
                 }
                 payments_currencies {
                     id
@@ -66,6 +73,13 @@ class MembersTithesPaymentsByPaymentDateQuery extends Query<Response> {
                     firstname
                     lastname
                     othernames
+                    #classes member belongs to
+                    #ideally one
+                    members_classes {
+                        id
+                        member_id
+                        class_id
+                    }
                 }
                 payments_currencies {
                     id

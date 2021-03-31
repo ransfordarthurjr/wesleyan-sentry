@@ -260,7 +260,7 @@
         <div class="flex-1 relative z-10 p-6 bg-gray-50 overflow-y-auto">
             <form [formGroup]="tithePaymentForm" id="tithe-payment-form">
                 <section>
-                    <h3>Member Details...</h3>
+                    <h3>Tithe Payment Details...</h3>
                     <div class="form-field-wrapper col-span-8 lg:col-span-4">
                         <mat-form-field appearance="outline">
                             <mat-label>Select Member</mat-label>
@@ -275,7 +275,6 @@
                                 required
                                 maxlength="32"
                                 [matAutocomplete]="memeberSelectAutocomplete"
-                                (keyup)="updateAutocompleteOptions($event)"
                             />
 
                             <mat-autocomplete
@@ -284,13 +283,10 @@
                             >
                                 <mat-option
                                     *ngFor="
-                                        let memberOption of membersAutocompleteOptions
+                                        let memberOption of membersAutocompleteOptions$
+                                            | async
                                     "
-                                    [value]="
-                                        memberOption.firstname +
-                                        ' ' +
-                                        memberOption.lastname
-                                    "
+                                    [value]="memberOption"
                                 >
                                     {{
                                         memberOption.firstname +
@@ -372,6 +368,7 @@
                     <h3>Tithe</h3>
                     <div class="form-field-wrapper col-span-8 lg:col-span-4">
                         <mat-form-field appearance="outline">
+                            <mat-label>Select Payment Type</mat-label>
                             <mat-select
                                 [formControl]="paymentTypeSelectControl"
                                 placeholder="Select Payment Type"
@@ -388,6 +385,7 @@
                     </div>
                     <div class="form-field-wrapper col-span-8 lg:col-span-4">
                         <mat-form-field appearance="outline">
+                            <mat-label>Select Currency</mat-label>
                             <mat-select
                                 [formControl]="currencySelectControl"
                                 placeholder="Select Currency"
@@ -395,7 +393,7 @@
                             >
                                 <mat-option
                                     *ngFor="let currency of paymentCurrencies"
-                                    [value]="currency"
+                                    [value]="currency.id"
                                 >
                                     {{
                                         currency.currency +

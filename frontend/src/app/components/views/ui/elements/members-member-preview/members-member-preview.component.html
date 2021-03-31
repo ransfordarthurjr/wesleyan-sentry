@@ -19,9 +19,9 @@
                     }}</span
                 >
             </div>
-            <div class="flex-1 text-left">
+            <div class="flex-1 text-left truncate">
                 <span
-                    class="font-semibold text-lg text-gray-500 overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    class="font-semibold text-lg text-gray-500"
                     [ngClass]="getClsClassLeader()"
                 >
                     {{
@@ -34,12 +34,12 @@
                 >
             </div>
         </div>
-        <div class="text-left text-base text-gray-700 overflow-hidden">
+        <div class="text-left text-base text-gray-700 truncate">
             <span class="inline-block pl-16">{{
                 member.memberInterface.members_membership_statuses.name
             }}</span>
         </div>
-        <div class="text-left text-sm text-gray-500 overflow-hidden">
+        <div class="text-left text-sm text-gray-500 truncate">
             <span class="inline-block pl-16">{{
                 member.classLeaderInterface.class_name
             }}</span>

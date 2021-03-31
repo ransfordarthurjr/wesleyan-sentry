@@ -1,3 +1,5 @@
+import { ClassLeaderInterface } from '../interfaces/db/class-leader-interface';
+import { MemberInterface } from '../interfaces/db/member-interface';
 import { MemberTithePaymentInterface } from '../interfaces/db/member-tithe-payment-interface';
 
 export class TithePaymentModel {
@@ -8,6 +10,7 @@ export class TithePaymentModel {
 
     private _memberTithePaymentInterface: MemberTithePaymentInterface;
     private _selected: boolean;
+    private _classLeaderInterface!: ClassLeaderInterface;
 
     public get memberTithePaymentInterface(): MemberTithePaymentInterface {
         return this._memberTithePaymentInterface;
@@ -25,5 +28,15 @@ export class TithePaymentModel {
 
     public set selected(selected: boolean) {
         this._selected = selected;
+    }
+
+    public get classLeaderInterface(): ClassLeaderInterface {
+        return this._classLeaderInterface;
+    }
+
+    public set classLeaderInterface(
+        classLeaderInterface: ClassLeaderInterface
+    ) {
+        this._classLeaderInterface = classLeaderInterface;
     }
 }

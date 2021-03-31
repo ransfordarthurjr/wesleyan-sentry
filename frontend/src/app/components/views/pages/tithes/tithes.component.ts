@@ -7,8 +7,17 @@ import {
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { combineLatest, forkJoin, Observable, Subscription } from 'rxjs';
-import { debounce, debounceTime, filter, map, takeWhile } from 'rxjs/operators';
+import { forkJoin, Observable, Subscription } from 'rxjs';
+import {
+    debounce,
+    debounceTime,
+    filter,
+    map,
+    takeWhile,
+    switchMap,
+    startWith,
+    distinctUntilChanged,
+} from 'rxjs/operators';
 import * as _moment from 'moment';
 // tslint:disable-next-line:no-duplicate-imports
 //import { default as _rollupMoment } from 'moment';
@@ -32,7 +41,7 @@ import { TithesTithePaymentPreviewComponent } from '../../ui/elements/tithes-tit
 import { ClassLeaderInterface } from 'src/app/interfaces/db/class-leader-interface';
 import { PaymentTypeInterface } from 'src/app/interfaces/db/payment-type-interface';
 import { PaymentCurrencyInterface } from 'src/app/interfaces/db/payment-currency-interface';
-import { doesNotReject } from 'assert';
+import { MemberModel } from 'src/app/models/member-model';
 
 @Component({
     selector: 'app-tithes',
@@ -83,10 +92,12 @@ export class TithesComponent implements OnInit, OnDestroy {
     /* #endregion */
 
     /* #region variablessubscriptons */
+    private _prerequisiteDataSubscription!: Subscription;
+
     private _membersTithesPayments$!: Observable<MemberTithePaymentInterface[]>;
     private _membersTithesPaymentSubscription!: Subscription;
 
-    private _prerequisiteDataSubscription!: Subscription;
+    private _membersAutocompleteOptions$!: Observable<MemberInterface[]>;
     /* #endregion */
 
     /* #region variablesdataholders */
@@ -96,8 +107,9 @@ export class TithesComponent implements OnInit, OnDestroy {
     private _classLeaders: ClassLeaderInterface[] = [];
     private _paymentTypes: PaymentTypeInterface[] = [];
     private _paymentCurrencies: PaymentCurrencyInterface[] = [];
-    private _membersAutocompleteOptions: MemberInterface[] = [];
 
+    private _selectedAutocompleteMember$!: Observable<MemberInterface>;
+    private _selectedMember!: MemberModel;
     /* #endregion */
 
     /* #region lifecyclemethods */
@@ -115,34 +127,46 @@ export class TithesComponent implements OnInit, OnDestroy {
     /* #region receivedevents */
     // received events//
     private _selectedTithePayment!: TithePaymentModel;
-    selectedTithePaymentEventReceived(event$: TithePaymentModel) {
-        //deselect the previous selected
+    public selectedTithePaymentEventReceived(event$: TithePaymentModel) {
+        // reset form
+        this._resetTithePaymentsForm();
+
+        // deselect the previous selected
         if (typeof this._selectedTithePayment !== 'undefined') {
             //unset selected on previous
             this._selectedTithePayment.selected = false;
         }
 
-        //set new selected as current
+        // set new selected as current
         this._selectedTithePayment = event$;
         this._selectedTithePayment.selected = true;
+
+        /*
+        //set value of memeber auto complete search box to ''
+        this._searchMemberAutocompleteTextControl.setValue('');
+        //set the class interface of the selectedPreview Paymnet
+        this._selectedTithePayment.classLeaderInterface = this._classLeaders.find(
+            (cl) =>
+                cl.id ===
+                this._selectedTithePayment.memberTithePaymentInterface.members
+                    .members_classes[0].class_id
+        )!;
+
+        // set tithe payment form member fields using selected preview data
+        this._tithePaymentForm.patchValue(
+            this._selectedTithePayment.memberTithePaymentInterface.members
+        );
+        // set class leader control of member
+        this._classLeaderSelectControl.setValue(
+            this._selectedTithePayment.classLeaderInterface.id
+        );
+        // set tithe payment form payment fields using selected preview data
+        this._tithePaymentForm.patchValue(
+            this._selectedTithePayment.memberTithePaymentInterface
+        );
+        */
     }
     // received events//
-
-    public updateAutocompleteOptions(event$: any) {
-        this._searchMemberAutocompleteTextControlValue = this._searchMemberAutocompleteTextControl.value;
-
-        this.memberService
-            .getMembersByName(this._searchMemberAutocompleteTextControlValue)
-            .pipe(map((response) => response.data))
-            .subscribe({
-                next: (members) => {
-                    if (members.members_by_name) {
-                        this._membersAutocompleteOptions =
-                            members.members_by_name;
-                    }
-                },
-            });
-    }
     /* #endregion */
 
     /* #region setupforms */
@@ -215,15 +239,52 @@ export class TithesComponent implements OnInit, OnDestroy {
             firstname: this._firstnameTextControl,
             othernames: this._othernamesTextControl,
             classLeader: this._classLeaderSelectControl,
-            paymentType: this._paymentTypeSelectControl,
-            currency: this._currencySelectControl,
+            payment_type_id: this._paymentTypeSelectControl,
+            payment_currency_id: this._currencySelectControl,
             amount: this._amountTextControl,
-            transactionReference: this._transactionReferenceTextControl,
+            transaction_reference: this._transactionReferenceTextControl,
             description: this._descriptionTextControl,
             /* #endregion */
         });
 
         this._setSearchFormControlsListeners();
+    }
+
+    private _resetTithePaymentsForm(): void {
+        /*this._paymentTypeSelectControl = new FormControl(
+            {
+                value: this._paymentTypes.find(
+                    (payment) => payment.name === 'Cash'
+                )?.id,
+                disabled: false,
+            },
+            { validators: Validators.compose([Validators.required]) }
+        );
+        this._currencySelectControl = new FormControl(
+            {
+                value: this._paymentCurrencies.find(
+                    (currency) => currency.code === 'GHS'
+                )?.id,
+                disabled: false,
+            },
+            { validators: Validators.compose([Validators.required]) }
+        );*/
+        this._tithePaymentForm.reset({
+            payment_type_id: this._paymentTypeSelectControl,
+            payment_currency_id: this._currencySelectControl,
+        });
+        // set default value of payments to Cash
+        //this._paymentTypeSelectControl.setValue(
+        //this._paymentTypes.find((payment) => payment.name === 'Cash')?.id
+        //);
+
+        // set default value of currency to GHS
+        //this._currencySelectControl.setValue(
+        //this._paymentCurrencies.find((currency) => currency.code === 'GHS')?.id
+        //);
+
+        // reset selected payment in preview
+        this._selectedTithePayment.selected = false;
     }
 
     private _setSearchFormControlsListeners(): void {
@@ -270,68 +331,66 @@ export class TithesComponent implements OnInit, OnDestroy {
                 },
             });
 
-        //setup observer for search member
-        // 1. when typed
-        // 2. when selected
-        const searchMemberAutocompleteSelected$ = this._searchMemberAutocompleteTextControl.valueChanges.pipe(
-            filter((value) => typeof value === 'object' && value !== null)
+        // setup observers for search textbox
+        // 1. observer when typing in search box
+        const searchMemberAutocompleteOnType$: Observable<string> = this._searchMemberAutocompleteTextControl.valueChanges.pipe(
+            // string for typed input
+            filter((searchText) => typeof searchText === 'string'),
+            // startWith(''),
+            // wait 1 sec after no input before searching
+            debounceTime(1 * 1000),
+            // don't search if input is no different that before
+            distinctUntilChanged(),
+            map((searchText) => {
+                // todo sanitize input
+                //remove unecessary spaces for now
+                return searchText.trim();
+            }),
+            filter((searchText: string) => searchText.length > 0)
         );
 
-        const searchMemberAutocompleteTyped$ = this._searchMemberAutocompleteTextControl.valueChanges.pipe(
-            filter((value) => typeof value === 'string')
-        );
-
-        searchMemberAutocompleteSelected$
-            .pipe
-            //debounceTime(1 * 1000)
-            // todo sanitize input
-            ()
-            .subscribe({
-                next: (selectedValue) => {
-                    console.log('sv', selectedValue);
-                },
-            });
-        searchMemberAutocompleteTyped$
-            .pipe
-            //debounceTime(1 * 1000)
-            // todo sanitize input
-            ()
-            .subscribe({
-                next: (typedValue) => {
-                    console.log('tv', typedValue);
-                },
-            });
-
-        //update member options based on typed input
-
-        /*this.searchMemberAutocompleteTextControl.valueChanges
-            .pipe(
-                // wait a second after typing has top before querying
-                debounceTime(1 * 1000),
-                map((value: string) => {
-                    console.log(value);
-                    return value.trim();
-                })
+        // 1.1 search for members on typring
+        this._membersAutocompleteOptions$ = searchMemberAutocompleteOnType$.pipe(
+            switchMap((searchValue) =>
+                this.memberService
+                    .getMembersByName(searchValue)
+                    .pipe(map((response) => response.data.members_by_name))
             )
-            .subscribe({
-                next: (value) => {
-                    this._searchMemberAutocompleteTextControlValue = value;
+        );
 
-                    this.memberService
-                        .getMembersByName(
-                            this._searchMemberAutocompleteTextControlValue
-                        )
-                        .pipe(map((response) => response.data))
-                        .subscribe({
-                            next: (members) => {
-                                if (members.members_by_name) {
-                                    this._membersAutocompleteOptions =
-                                        members.members_by_name;
-                                }
-                            },
-                        });
-                },
-            });*/
+        // 2. observer when autocomplete search selected
+        this._selectedAutocompleteMember$ = this._searchMemberAutocompleteTextControl.valueChanges.pipe(
+            // object for selected from autoc options
+            filter(
+                (selectedMember) =>
+                    typeof selectedMember === 'object' &&
+                    selectedMember !== null
+            )
+        );
+
+        // 2.1 load form using member selected
+        this._selectedAutocompleteMember$.subscribe({
+            next: (selectedMember: MemberInterface) => {
+                //console.log('sm', selectedMember);
+                this._selectedMember = new MemberModel(selectedMember);
+
+                this._selectedMember.classLeaderInterface = this._classLeaders.find(
+                    (cl) => cl.id === selectedMember.members_classes[0].class_id
+                )!;
+
+                // reset form first
+                this._resetTithePaymentsForm();
+
+                // set form fields using selected
+                this._tithePaymentForm.patchValue(
+                    this._selectedMember.memberInterface
+                );
+                // set class leader of member
+                this._classLeaderSelectControl.setValue(
+                    this._selectedMember.classLeaderInterface.id
+                );
+            },
+        });
     }
     // setup forms
     /* #endregion */
@@ -352,20 +411,20 @@ export class TithesComponent implements OnInit, OnDestroy {
     // get setup information
     private _setupPrerequisiteDataServices(): void {
         //create observable of subscriptions of prerequisites
-        const getClassLeaders = this.classLeaderService
+        const getClassLeaders$ = this.classLeaderService
             .getClassLeaders()
             .pipe(map((response) => response.data));
-        const getPaymentTypes = this.paymentTypeService
+        const getPaymentTypes$ = this.paymentTypeService
             .getPaymentTypes()
             .pipe(map((response) => response.data));
-        const getPaymentCurrencies = this.paymentCurrencyService
+        const getPaymentCurrencies$ = this.paymentCurrencyService
             .getPaymentCurrencies()
             .pipe(map((response) => response.data));
 
         this._prerequisiteDataSubscription = forkJoin([
-            getClassLeaders,
-            getPaymentTypes,
-            getPaymentCurrencies,
+            getClassLeaders$,
+            getPaymentTypes$,
+            getPaymentCurrencies$,
         ]).subscribe({
             next: ([classLeaders, paymentTypes, paymentCurrencies]) => {
                 if (classLeaders.members_class_leaders) {
@@ -384,18 +443,44 @@ export class TithesComponent implements OnInit, OnDestroy {
 
             complete: () => {
                 // set default value of payments to Cash
-                this._paymentTypeSelectControl.setValue(
+                this._paymentTypeSelectControl = new FormControl(
+                    {
+                        value: this._paymentTypes.find(
+                            (payment) => payment.name === 'Cash'
+                        )?.id,
+                        disabled: false,
+                    },
+                    { validators: Validators.compose([Validators.required]) }
+                );
+                this._tithePaymentForm.setControl(
+                    'payment_type_id',
+                    this._paymentTypeSelectControl
+                );
+                /*/* this._paymentTypeSelectControl.setValue(
                     this._paymentTypes.find(
                         (payment) => payment.name === 'Cash'
                     )?.id
-                );
+                );*/
 
                 // set default value of currency to GHS
-                this._currencySelectControl.setValue(
-                    this.paymentCurrencies.find(
+                this._currencySelectControl = new FormControl(
+                    {
+                        value: this._paymentCurrencies.find(
+                            (currency) => currency.code === 'GHS'
+                        )?.id,
+                        disabled: false,
+                    },
+                    { validators: Validators.compose([Validators.required]) }
+                );
+                this._tithePaymentForm.setControl(
+                    'payment_currency_id',
+                    this._currencySelectControl
+                );
+                /*/*this._currencySelectControl.setValue(
+                    this._paymentCurrencies.find(
                         (currency) => currency.code === 'GHS'
                     )?.id
-                );
+                );*/
             },
         });
     }
@@ -439,10 +524,8 @@ export class TithesComponent implements OnInit, OnDestroy {
     /* #endregion */
 
     /* #region memberfunctions */
-    public searchMemberAutocompleteDisplay(
-        member: MemberInterface
-    ): string | undefined {
-        return member ? `${member.firstname} ${member.lastname}` : undefined;
+    public searchMemberAutocompleteDisplay(member: MemberInterface): string {
+        return member ? `${member.firstname} ${member.lastname}` : '';
     }
     /* #endregion */
 
@@ -466,6 +549,10 @@ export class TithesComponent implements OnInit, OnDestroy {
     /* #endregion */
 
     /* #region gettersandsetters */
+    public get membersAutocompleteOptions$(): Observable<MemberInterface[]> {
+        return this._membersAutocompleteOptions$;
+    }
+
     public get membersTithesPayments(): TithePaymentModel[] {
         return this._membersTithesPayments;
     }
@@ -484,10 +571,6 @@ export class TithesComponent implements OnInit, OnDestroy {
 
     public get paymentCurrencies(): PaymentCurrencyInterface[] {
         return this._paymentCurrencies;
-    }
-
-    public get membersAutocompleteOptions(): MemberInterface[] {
-        return this._membersAutocompleteOptions;
     }
 
     public get tithePaymentsDateForm(): FormGroup {
